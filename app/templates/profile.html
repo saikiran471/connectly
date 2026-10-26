@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}@{{ profile_user.username }} · Connectly{% endblock %}
+{% block content %}
+<section class="profile-page">
+  <div class="profile-header card">
+    <div class="profile-avatar">{{ profile_user.username[0]|upper }}</div>
+    <div class="profile-details">
+      <div class="profile-name-row"><h1>@{{ profile_user.username }}</h1>
+        {% if profile_user.id != current_user.id %}
+        <form method="post" action="{{ url_for('main.toggle_follow', username=profile_user.username) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="button {{ 'secondary' if current_user.is_following(profile_user) else 'primary' }}" type="submit">{{ 'Following' if current_user.is_following(profile_user) else 'Follow' }}</button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="stats profile-stats">
+        <div><strong>{{ profile_user.posts|length }}</strong><span>Posts</span></div>
+        <div><strong>{{ profile_user.followers.count() }}</strong><span>Followers</span></div>
+        <div><strong>{{ profile_user.following.count() }}</strong><span>Following</span></div>
+      </div>
+      <p>{{ profile_user.bio or "No bio yet." }}</p>
+      {% if profile_user.id == current_user.id %}
+      <details class="edit-profile">
+        <summary>Edit bio</summary>
+        <form method="post" action="{{ url_for('main.edit_profile') }}" class="stack-form">
+          {{ form.hidden_tag() }}
+          {{ form.bio(placeholder="A little about you", rows="3", class_="textarea") }}
+          {{ form.submit(class_="button primary") }}
+        </form>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+  <div class="section-heading"><h2>Posts</h2><span class="muted small">{{ profile_user.posts|length }} moments</span></div>
+  <div class="profile-grid">
+    {% for post in profile_user.posts|sort(attribute='created_at', reverse=true) %}
+      <a class="grid-post" href="{{ url_for('main.feed') }}" title="{{ post.caption }}"><img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" alt="Post by {{ profile_user.username }}" loading="lazy"><span>♥ {{ post.likes|length }} · ☵ {{ post.comments|length }}</span></a>
+    {% else %}
+      <div class="empty-state card"><h2>No posts yet</h2><p class="muted">When this user shares a moment, it will appear here.</p></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

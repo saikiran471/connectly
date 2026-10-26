@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Create account · Connectly{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-art">
+    <div class="art-orb"></div>
+    <p class="eyebrow">A LITTLE MORE CONNECTED</p>
+    <h1>Your world,<br>in one place.</h1>
+    <p class="muted">Create a profile, share a moment, find your people.</p>
+  </div>
+  <div class="auth-card">
+    <a class="brand auth-brand" href="{{ url_for('main.register') }}">connectly<span>•</span></a>
+    <h2>Create your account</h2>
+    <p class="muted">It only takes a minute.</p>
+    <form method="post" class="stack-form">
+      {{ form.hidden_tag() }}
+      {% for field, placeholder, autocomplete in [
+        (form.username, "Choose a username", "username"),
+        (form.email, "you@example.com", "email"),
+        (form.password, "At least 8 characters", "new-password"),
+        (form.confirm_password, "Enter password again", "new-password")
+      ] %}
+        <label>{{ field.label }}{{ field(placeholder=placeholder, autocomplete=autocomplete) }}</label>
+        {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      {% endfor %}
+      {{ form.submit(class_="button primary full") }}
+    </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('main.login') }}">Log in</a></p>
+  </div>
+</section>
+{% endblock %}

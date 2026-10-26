@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Saved posts · Connectly{% endblock %}
+{% block content %}
+<section class="explore-page">
+  <div class="page-heading"><div><p class="eyebrow">YOUR PRIVATE COLLECTION</p><h1>Saved posts</h1></div></div>
+  <div class="explore-grid">
+  {% for bookmark in bookmarks %}
+    <a class="grid-post" href="{{ url_for('main.profile', username=bookmark.post.author.username) }}"><img src="{{ url_for('static', filename='uploads/' ~ bookmark.post.image_filename) }}" alt="Saved post by {{ bookmark.post.author.username }}"><span>@{{ bookmark.post.author.username }} · {{ bookmark.post.caption }}</span></a>
+  {% else %}
+    <div class="empty-state card"><h2>No saved posts yet</h2><p class="muted">Use the ☆ Save control on any post to keep it here.</p><a class="button primary" href="{{ url_for('main.feed') }}">Back to feed</a></div>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

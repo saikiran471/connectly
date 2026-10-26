@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Chat with @{{ other.username }} · Connectly{% endblock %}
+{% block content %}
+<section class="chat-page card" data-conversation-id="{{ conversation.id }}">
+  <header class="chat-header"><a class="button secondary" href="{{ url_for('main.messages') }}">← Messages</a><span class="avatar">{{ other.username[0]|upper }}</span><div><strong>@{{ other.username }}</strong><small class="muted">Private conversation</small></div></header>
+  <div class="chat-messages" id="chat-messages" aria-live="polite">
+    {% for message in conversation.messages %}
+    <div class="chat-bubble-row {{ 'mine' if message.sender_id == current_user.id else '' }}"><div class="chat-bubble"><span>{{ message.body }}</span><small>{{ message.sender.username }} · {{ message.created_at.strftime("%H:%M") }}</small></div></div>
+    {% else %}<div class="chat-empty muted">Say hello to start the conversation.</div>{% endfor %}
+  </div>
+  <form class="chat-form" id="chat-form" method="post">
+    {{ form.hidden_tag() }}{{ form.body(id="chat-input", placeholder="Write a message…", autocomplete="off", maxlength="2000") }}<button class="button primary" type="submit">Send</button>
+  </form>
+  <p class="muted small chat-note">Messages are saved to the database. Live updates work when the Socket.IO server is running.</p>
+</section>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.querySelector("[data-conversation-id]");
+  const list = document.getElementById("chat-messages");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  if (!container || !window.io) return;
+  const conversationId = Number(container.dataset.conversationId);
+  const socket = io();
+  socket.on("connect", () => socket.emit("join_conversation", {conversation_id: conversationId}));
+  socket.on("new_message", (message) => {
+    if (message.conversation_id !== conversationId) return;
+    if (list.querySelector(`[data-message-id="${message.id}"]`)) return;
+    const row = document.createElement("div");
+    row.className = "chat-bubble-row " + (message.sender_id === {{ current_user.id }} ? "mine" : "");
+    row.dataset.messageId = message.id;
+    const bubble = document.createElement("div"); bubble.className = "chat-bubble";
+    const body = document.createElement("span"); body.textContent = message.body;
+    const meta = document.createElement("small"); meta.textContent = `${message.sender} · ${new Date(message.created_at).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+    bubble.append(body, meta); row.append(bubble); list.append(row); list.scrollTop = list.scrollHeight;
+  });
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const body = input.value.trim();
+    if (!body) return;
+    socket.emit("send_message", {conversation_id: conversationId, body});
+    input.value = ""; input.focus();
+  });
+  list.scrollTop = list.scrollHeight;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Connectly{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('main.feed') }}">connectly<span>•</span></a>
+    <nav>
+      <a href="{{ url_for('main.feed') }}">Feed</a>
+      <a href="{{ url_for('main.explore') }}">Explore</a>
+      <a href="{{ url_for('main.saved_posts') }}">Saved</a>
+      <a href="{{ url_for('main.messages') }}">Messages</a>
+      <a href="{{ url_for('main.notifications') }}" class="notification-link">Alerts{% if current_user.unread_notifications_count %}<span class="notification-count">{{ current_user.unread_notifications_count }}</span>{% endif %}</a>
+      <a href="{{ url_for('main.profile', username=current_user.username) }}">Profile</a>
+      <form class="inline-form" method="post" action="{{ url_for('main.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="nav-logout" type="submit">Log out</button>
+      </form>
+    </nav>
+  </header>
+  {% endif %}
+  <main class="page-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">Connectly · A learning project built with Flask</footer>
+</body>
+</html>

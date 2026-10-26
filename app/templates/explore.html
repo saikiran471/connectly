@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Explore · Connectly{% endblock %}
+{% block content %}
+<section class="explore-page">
+  <div class="page-heading"><div><p class="eyebrow">FIND YOUR PEOPLE</p><h1>Explore</h1></div></div>
+  <form class="search-form card" method="get" action="{{ url_for('main.explore') }}"><span>⌕</span><input type="search" name="q" value="{{ q }}" placeholder="Search usernames or bios…" aria-label="Search users"><button class="button primary" type="submit">Search</button></form>
+  {% if q %}<h2 class="subheading">People matching “{{ q }}”</h2><div class="user-results">
+    {% for user in users %}<div class="user-result card"><a class="avatar large" href="{{ url_for('main.profile', username=user.username) }}">{{ user.username[0]|upper }}</a><a class="user-result-text" href="{{ url_for('main.profile', username=user.username) }}"><strong>@{{ user.username }}</strong><small class="muted">{{ user.bio or "Connect on Connectly" }}</small></a>
+    {% if user.id != current_user.id %}<form method="post" action="{{ url_for('main.toggle_follow', username=user.username) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button {{ 'secondary' if current_user.is_following(user) else 'primary' }}" type="submit">{{ 'Following' if current_user.is_following(user) else 'Follow' }}</button></form>{% endif %}</div>
+    {% else %}<p class="muted">No users found. Try another search.</p>{% endfor %}
+  </div>{% endif %}
+  <div class="section-heading"><h2>Recent moments</h2><span class="muted small">Fresh from the community</span></div>
+  <div class="explore-grid">{% for post in posts %}<a class="grid-post" href="{{ url_for('main.profile', username=post.author.username) }}" title="View @{{ post.author.username }}'s profile"><img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" alt="Post by {{ post.author.username }}" loading="lazy"><span>@{{ post.author.username }} · ♥ {{ post.likes|length }}</span></a>{% else %}<p class="muted">No posts to explore yet. Be the first to share.</p>{% endfor %}</div>
+</section>
+{% endblock %}

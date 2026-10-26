@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Log in · Connectly{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-art">
+    <div class="art-orb"></div>
+    <p class="eyebrow">YOUR PEOPLE. YOUR MOMENTS.</p>
+    <h1>Make space<br>for connection.</h1>
+    <p class="muted">Share the little things with the people who matter.</p>
+  </div>
+  <div class="auth-card">
+    <a class="brand auth-brand" href="{{ url_for('main.login') }}">connectly<span>•</span></a>
+    <h2>Welcome back</h2>
+    <p class="muted">Log in to see what your people are sharing.</p>
+    <form method="post" class="stack-form">
+      {{ form.hidden_tag() }}
+      <label>{{ form.email.label }}{{ form.email(placeholder="you@example.com", autocomplete="email") }}</label>
+      {% for error in form.email.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      <label>{{ form.password.label }}{{ form.password(placeholder="Your password", autocomplete="current-password") }}</label>
+      {% for error in form.password.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+      {{ form.submit(class_="button primary full") }}
+    </form>
+    <p class="auth-switch">New to Connectly? <a href="{{ url_for('main.register') }}">Create an account</a></p>
+  </div>
+</section>
+{% endblock %}

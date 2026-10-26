@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Feed · Connectly{% endblock %}
+{% block content %}
+<div class="feed-layout">
+  <section class="feed-main">
+    <div class="page-heading"><div><p class="eyebrow">YOUR COMMUNITY</p><h1>Your feed</h1></div><a class="button secondary" href="{{ url_for('main.explore') }}">Discover people ↗</a></div>
+
+    <section class="stories-strip card">
+      <div class="stories-heading"><strong>Stories</strong><span class="muted small">Disappear after 24 hours</span></div>
+      <form class="story-add" method="post" action="{{ url_for('main.create_story') }}" enctype="multipart/form-data">
+        {{ story_form.hidden_tag() }}
+        <label class="story-plus" title="Add a story">＋<input type="file" name="image" accept="image/*" required></label>
+        <input type="text" name="caption" maxlength="180" placeholder="Story caption (optional)">
+        <button class="button secondary" type="submit">Add</button>
+      </form>
+      <div class="story-bubbles">
+        {% for story in stories %}
+        <div class="story-bubble">
+          <a href="{{ url_for('main.profile', username=story.author.username) }}"><span class="story-ring"><img src="{{ url_for('static', filename='uploads/' ~ story.image_filename) }}" alt=""></span><small>@{{ story.author.username }}</small></a>
+          {% if story.user_id == current_user.id %}
+          <form method="post" action="{{ url_for('main.delete_story', story_id=story.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="tiny-delete" title="Delete story">×</button></form>
+          {% endif %}
+        </div>
+        {% else %}<p class="muted small">No active stories yet. Add the first one.</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="composer card">
+      <div class="section-title"><span class="avatar">{{ current_user.username[0]|upper }}</span><div><strong>Share a moment</strong><p class="muted small">What have you been up to?</p></div></div>
+      <form method="post" action="{{ url_for('main.create_post') }}" enctype="multipart/form-data" class="stack-form">
+        {{ post_form.hidden_tag() }}
+        <label class="upload-box" for="image-input"><span class="upload-icon">＋</span><span><strong>Choose a photo</strong><small class="muted">PNG, JPG, GIF or WEBP · up to 5 MB</small></span>{{ post_form.image(id="image-input", class_="file-input") }}</label>
+        <p id="selected-file" class="muted small"></p>
+        {{ post_form.caption(placeholder="Write a caption…", rows="3", class_="textarea") }}
+        {{ post_form.submit(class_="button primary") }}
+      </form>
+    </section>
+
+    {% for post in posts %}
+    <article class="post-card card">
+      <div class="post-header">
+        <a class="avatar" href="{{ url_for('main.profile', username=post.author.username) }}">{{ post.author.username[0]|upper }}</a>
+        <div class="post-author"><a href="{{ url_for('main.profile', username=post.author.username) }}"><strong>@{{ post.author.username }}</strong></a><span class="muted small">{{ post.created_at.strftime("%b %d, %Y · %H:%M") }}</span></div>
+        <div class="post-menu">
+          <form method="post" action="{{ url_for('main.toggle_bookmark', post_id=post.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="menu-button" type="submit" title="Save post">{{ '★ Saved' if current_user.has_bookmarked(post) else '☆ Save' }}</button></form>
+          {% if post.user_id == current_user.id %}
+          <form method="post" action="{{ url_for('main.delete_post', post_id=post.id) }}" data-confirm="Delete this post permanently?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="menu-button danger-text" type="submit">Delete</button></form>
+          {% else %}
+          <details class="report-menu"><summary class="menu-button">Report</summary><form method="post" action="{{ url_for('main.report_post', post_id=post.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="reason" minlength="5" maxlength="300" placeholder="Why report this post?" required><button type="submit">Send report</button></form></details>
+          {% endif %}
+        </div>
+      </div>
+      <img class="post-image" src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" alt="Photo posted by {{ post.author.username }}" loading="lazy">
+      <div class="post-content">
+        <div class="post-actions">
+          <form method="post" action="{{ url_for('main.toggle_like', post_id=post.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-button like-button {{ 'liked' if post.is_liked_by(current_user) else '' }}" aria-label="Like or unlike post" title="Like or unlike">♥</button></form>
+          <span class="muted small">{{ post.likes|length }} {{ 'like' if post.likes|length == 1 else 'likes' }}</span>
+          <span class="post-spacer"></span><span class="muted small">☵ {{ post.comments|length }} comments</span>
+        </div>
+        {% if post.caption %}<p class="caption"><strong>@{{ post.author.username }}</strong> {{ post.caption }}</p>{% endif %}
+        <div class="comments">{% for comment in post.comments %}<p><strong>@{{ comment.author.username }}</strong> {{ comment.body }}</p>{% endfor %}</div>
+        <form class="comment-form" method="post" action="{{ url_for('main.add_comment', post_id=post.id) }}">{{ comment_forms[post.id].hidden_tag() }}{{ comment_forms[post.id].body(placeholder="Add a comment…", aria_label="Add a comment") }}<button type="submit">Post</button></form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-state card"><div class="empty-icon">✦</div><h2>Your feed starts here</h2><p class="muted">Follow people in Explore or share your first photo.</p><a class="button primary" href="{{ url_for('main.explore') }}">Explore Connectly</a></div>
+    {% endfor %}
+    {% if pagination and pagination.pages > 1 %}
+    <div class="pagination">
+      {% if pagination.has_prev %}<a class="button secondary" href="{{ url_for('main.feed', page=pagination.prev_num) }}">← Newer</a>{% endif %}
+      <span class="muted small">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}<a class="button secondary" href="{{ url_for('main.feed', page=pagination.next_num) }}">Older →</a>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+  <aside class="feed-sidebar">
+    <section class="card sidebar-profile"><div class="avatar large">{{ current_user.username[0]|upper }}</div><h3>@{{ current_user.username }}</h3><p class="muted small">{{ current_user.bio or "Your next chapter starts with a post." }}</p><div class="stats"><div><strong>{{ current_user.posts|length }}</strong><span>Posts</span></div><div><strong>{{ current_user.followers.count() }}</strong><span>Followers</span></div><div><strong>{{ current_user.following.count() }}</strong><span>Following</span></div></div><a class="button secondary full" href="{{ url_for('main.profile', username=current_user.username) }}">View profile</a></section>
+    <section class="tip-card"><span>✧</span><h3>Make it yours</h3><p>Complete your profile, save posts, and connect with your community.</p></section>
+  </aside>
+</div>
+{% endblock %}

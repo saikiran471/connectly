@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Messages · Connectly{% endblock %}
+{% block content %}
+<section class="messages-page">
+  <div class="page-heading"><div><p class="eyebrow">PRIVATE CONVERSATIONS</p><h1>Messages</h1></div></div>
+  <div class="messages-columns">
+    <section class="card conversation-list">
+      <h2>Recent chats</h2>
+      {% for conv, other, last in conversations %}
+      {% if other %}
+      <a class="conversation-row" href="{{ url_for('main.conversation', conversation_id=conv.id) }}"><span class="avatar">{{ other.username[0]|upper }}</span><span class="conversation-preview"><strong>@{{ other.username }}</strong><small class="muted">{{ (last.body if last else "Start a conversation")|truncate(60) }}</small></span><span class="arrow">›</span></a>
+      {% endif %}
+      {% else %}<p class="muted small">No conversations yet. Start one below.</p>{% endfor %}
+    </section>
+    <section class="card start-chat">
+      <h2>Start a conversation</h2><p class="muted small">Choose a Connectly user to message privately.</p>
+      <div class="user-list">
+      {% for user in users %}
+        <form method="post" action="{{ url_for('main.start_message', username=user.username) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><span class="avatar">{{ user.username[0]|upper }}</span><strong>@{{ user.username }}</strong><button class="button secondary" type="submit">Message</button></form>
+      {% else %}<p class="muted">No other users registered yet.</p>{% endfor %}
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}
